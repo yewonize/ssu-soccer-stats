@@ -329,15 +329,15 @@ if not selected_players:
         with mc1:
             render_metric("총 경기수", f"{total_games}<span class='metric-unit'>경기</span>")
         with mc2:
-            render_metric("전적", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
+            render_metric("승/무/패", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
         with mc3:
-            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'></span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'></span>")
+            render_metric("팀 득점/실점", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'></span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'></span>")
         with mc4:
             render_metric("최다 MOM", mom_text)
         
         st.divider()
 
-        t1, t2 = st.tabs(["전체 경기 일정", "선수 랭킹"])
+        t1, t2 = st.tabs(["전체 경기 일정", "선수"])
         
         with t1:
             # 날짜 내림차순 정렬
