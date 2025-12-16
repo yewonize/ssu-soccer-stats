@@ -8,72 +8,126 @@ import io
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="SSU DATA CENTER", 
-    page_icon="⚽", 
     layout="wide"
 )
 
 # 커스텀 CSS
 st.markdown("""
     <style>
+    /* 폰트 설정 및 전체 글자 크기 축소 */
+    html, body, [class*="css"] {
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+        font-size: 14px;
+    }
+    
     /* 메인 컨테이너 패딩 조절 */
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
     }
     
-    /* 헤더 스타일 */
-    .header-container {
+    /* 헤더 스타일 (파란색 배경) */
+    .header-box {
+        background-color: #00467F; /* SSU Blue */
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        color: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid #eee;
     }
+    
+    .header-text-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
     .main-title { 
-        font-size: 2.5rem; 
+        font-size: 28px; 
         font-weight: 800; 
-        color: #00467F; 
+        color: white; 
         line-height: 1.2;
+        margin-bottom: 4px;
     }
+    
     .sub-title { 
-        font-size: 1.2rem; 
-        font-weight: 600; 
-        color: #666; 
+        font-size: 16px; 
+        font-weight: 500; 
+        color: #e0e0e0; 
+        margin: 0;
     }
     
     /* 카드 스타일 (데이터 표시 영역) */
     .data-card {
         background-color: #ffffff;
-        padding: 25px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         margin-bottom: 20px;
-        border: 1px solid #f0f0f0;
+        border: 1px solid #eee;
+    }
+    
+    /* 섹션 헤더 (서브헤더) 스타일 */
+    h3 {
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        color: #333 !important;
+        margin-bottom: 15px !important;
+    }
+    
+    h5 {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        color: #555 !important;
     }
     
     /* 메트릭 카드 스타일 */
     div[data-testid="stMetric"] {
         background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 10px;
+        padding: 10px 15px;
+        border-radius: 8px;
         border: 1px solid #eee;
+    }
+    div[data-testid="stMetricLabel"] {
+        font-size: 13px;
+        color: #666;
+    }
+    div[data-testid="stMetricValue"] {
+        font-size: 20px;
+        font-weight: 700;
+        color: #00467F;
+    }
+    
+    /* 테이블 헤더 스타일 */
+    thead tr th:first-child {display:none}
+    tbody th {display:none}
+    
+    /* 버튼 스타일 조정 */
+    div.stButton > button {
+        border-radius: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 2. 데이터 처리 함수
+# 2. 데이터 처리 및 세션 관리
 # -----------------------------------------------------------------------------
-@st.cache_data
-def load_default_data():
-    """기본 CSV 파일 로드 (GitHub 업로드용)"""
+
+# 초기 데이터 로드 (세션 상태에 저장하여 수정 가능하게 함)
+if 'player_csv' not in st.session_state:
     try:
-        df_p = pd.read_csv("player_records.csv")
-        df_m = pd.read_csv("match_records.csv")
-        return preprocess_data(df_p, df_m)
+        with open("player_records.csv", "r", encoding="utf-8") as f:
+            st.session_state['player_csv'] = f.read()
     except FileNotFoundError:
-        return None, None
+        st.session_state['player_csv'] = ""
+
+if 'match_csv' not in st.session_state:
+    try:
+        with open("match_records.csv", "r", encoding="utf-8") as f:
+            st.session_state['match_csv'] = f.read()
+    except FileNotFoundError:
+        st.session_state['match_csv'] = ""
 
 def preprocess_data(df_p, df_m):
     """데이터 전처리 공통 함수"""
@@ -108,44 +162,83 @@ def parse_match_result(score_str):
         return None, 0, 0
 
 # -----------------------------------------------------------------------------
-# 3. 데이터 로드 및 헤더 구성
+# 3. 팝업창(Dialog) 정의
+# -----------------------------------------------------------------------------
+@st.dialog("📊 데이터 일괄 등록/수정")
+def edit_data_dialog():
+    st.markdown("엑셀이나 CSV 파일의 내용을 복사해서 아래 입력창에 붙여넣으세요. (첫 줄 헤더 포함)")
+    
+    st.markdown("##### 1. 경기기록 (Match Data)")
+    st.caption("필수 컬럼: 연도, 대회명, 라운드, 날짜, 상대팀, 스코어...")
+    new_match_csv = st.text_area(
+        "match_input", 
+        value=st.session_state.match_csv, 
+        height=200, 
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("##### 2. 선수기록 (Player Data)")
+    st.caption("필수 컬럼: 연도, 대회명, 라운드, 날짜, 상대팀, 선수명, 선발/교체...")
+    new_player_csv = st.text_area(
+        "player_input", 
+        value=st.session_state.player_csv, 
+        height=200, 
+        label_visibility="collapsed"
+    )
+    
+    col_btn1, col_btn2 = st.columns([1, 1])
+    with col_btn1:
+        if st.button("취소", use_container_width=True):
+            st.rerun()
+            
+    with col_btn2:
+        if st.button("업데이트", type="primary", use_container_width=True):
+            # 세션 상태 업데이트
+            st.session_state.match_csv = new_match_csv
+            st.session_state.player_csv = new_player_csv
+            st.rerun()
+
+# -----------------------------------------------------------------------------
+# 4. 헤더 구성 및 데이터 로드
 # -----------------------------------------------------------------------------
 
-# 헤더 레이아웃 (좌: 타이틀, 우: 데이터 입력)
+# 헤더 섹션
 col_header_left, col_header_right = st.columns([3, 1])
 
 with col_header_left:
-    st.markdown('<div class="main-title">SSU DATA CENTER</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">SSU FOOTBALL TEAM</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="header-box" style="margin-bottom: 0;">
+        <div class="header-text-group">
+            <div class="main-title">SSU DATA CENTER</div>
+            <div class="sub-title">SSU FOOTBALL TEAM</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col_header_right:
-    # 데이터 입력 창 (Expander)
-    with st.expander("📂 데이터 업로드/수정", expanded=False):
-        st.info("CSV 내용을 붙여넣으세요.")
-        csv_text_player = st.text_area("선수 기록 (Player)", height=100, help="player_records.csv 내용")
-        csv_text_match = st.text_area("경기 기록 (Match)", height=100, help="match_records.csv 내용")
-
-# 데이터 로드 로직
-if csv_text_player and csv_text_match:
-    try:
-        df_p_raw = pd.read_csv(io.StringIO(csv_text_player))
-        df_m_raw = pd.read_csv(io.StringIO(csv_text_match))
-        df_player, df_match = preprocess_data(df_p_raw, df_m_raw)
-        st.toast("✅ 데이터가 업데이트되었습니다.", icon="💾")
-    except Exception as e:
-        st.error(f"데이터 오류: {e}")
-        df_player, df_match = load_default_data()
-else:
-    df_player, df_match = load_default_data()
-
-if df_player is None or df_match is None:
-    st.error("❌ 데이터를 찾을 수 없습니다. CSV 내용을 입력하거나 GitHub에 파일을 올려주세요.")
-    st.stop()
+    # 우측 상단에 버튼 배치 (헤더 높이와 맞추기 위해 여백 조정)
+    st.write("") 
+    st.write("")
+    if st.button("📊 데이터 등록/수정", use_container_width=True):
+        edit_data_dialog()
 
 st.divider()
 
+# 데이터 로드 (세션 상태에서 읽기)
+if st.session_state.player_csv and st.session_state.match_csv:
+    try:
+        df_p_raw = pd.read_csv(io.StringIO(st.session_state.player_csv))
+        df_m_raw = pd.read_csv(io.StringIO(st.session_state.match_csv))
+        df_player, df_match = preprocess_data(df_p_raw, df_m_raw)
+    except Exception as e:
+        st.error(f"데이터 형식 오류: {e}")
+        st.stop()
+else:
+    st.warning("데이터가 없습니다. '데이터 등록/수정' 버튼을 눌러 데이터를 입력해주세요.")
+    st.stop()
+
 # -----------------------------------------------------------------------------
-# 4. 가로형 필터바
+# 5. 가로형 필터바
 # -----------------------------------------------------------------------------
 st.markdown("##### 🔍 기록 검색 필터")
 
@@ -167,40 +260,37 @@ all_opponents = sorted(df_player['상대팀'].unique())
 # 1. 연도 선택
 with f_col1:
     selected_years = st.multiselect(
-        "📅 연도", 
+        "연도", 
         all_years, 
         key='year',
-        format_func=lambda x: str(x) # 2,025 -> 2025 포맷팅
+        format_func=lambda x: str(x)
     )
 
 # 2. 대회명 선택
 with f_col2:
-    selected_tournaments = st.multiselect("🏆 대회명", all_tournaments, key='tour')
+    selected_tournaments = st.multiselect("대회명", all_tournaments, key='tour')
 
 # 3. 상대팀 선택
 with f_col3:
-    selected_opponents = st.multiselect("🆚 상대팀", all_opponents, key='opp')
+    selected_opponents = st.multiselect("상대팀", all_opponents, key='opp')
 
 # 4. 선수명 선택 (로직 개선: 선택된 연도에 기록이 있는 선수만 표시)
-# 먼저 연도로 데이터를 임시 필터링하여 선수 목록을 추출
 temp_player_df = df_player.copy()
 if selected_years:
     temp_player_df = temp_player_df[temp_player_df['연도'].isin(selected_years)]
-
-# 출전 시간이 0이거나 기록이 없는 경우는 제외할 수도 있으나, 명단에 있으면 포함하는 것이 일반적이므로 이름 기준으로 추출
 available_players = sorted(temp_player_df['선수명'].unique())
 
 with f_col4:
-    selected_players = st.multiselect("🏃 선수명", available_players, key='player')
+    selected_players = st.multiselect("선수명", available_players, key='player')
 
 # 5. 초기화 버튼
 with f_col5:
-    st.write("") # 줄맞춤용 공백
     st.write("") 
-    st.button("🔄", on_click=reset_filters, help="필터 초기화")
+    st.write("") 
+    st.button("초기화", on_click=reset_filters)
 
 # -----------------------------------------------------------------------------
-# 5. 데이터 필터링 적용
+# 6. 데이터 필터링 적용
 # -----------------------------------------------------------------------------
 filtered_p = df_player.copy()
 
@@ -222,7 +312,7 @@ relevant_matches = filtered_p_match_subset[['날짜', '상대팀']].drop_duplica
 final_match_df = df_match.merge(relevant_matches, on=['날짜', '상대팀'], how='inner')
 
 # -----------------------------------------------------------------------------
-# 6. 메인 콘텐츠 (카드형 디자인)
+# 7. 메인 콘텐츠 (카드형 디자인)
 # -----------------------------------------------------------------------------
 
 # [Case 1] 전체 선수 보기 (Team Record)
@@ -230,7 +320,7 @@ if not selected_players:
     # 카드 시작
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader("🛡️ TEAM RECORDS (전체 보기)")
+        st.subheader("TEAM RECORDS (전체 보기)")
         
         # (1) 요약 통계
         wins, draws, losses = 0, 0, 0
@@ -263,12 +353,13 @@ if not selected_players:
         st.divider()
 
         # (2) 탭 (전체 경기가 먼저)
-        t1, t2 = st.tabs(["📅 전체 경기 일정", "📊 선수 랭킹"])
+        t1, t2 = st.tabs(["전체 경기 일정", "선수 랭킹"])
         
         with t1:
-            view_cols = ['연도', '대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', '비고']
+            # '연도' 컬럼 제외
+            view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', '비고']
             view_cols = [c for c in view_cols if c in final_match_df.columns]
-            # 연도 포맷팅을 위해 문자열 변환 후 표시
+            
             display_match = final_match_df[view_cols].copy()
             st.dataframe(display_match, use_container_width=True, hide_index=True)
             
@@ -296,7 +387,7 @@ else:
     # 카드 시작
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader(f"🏃 PLAYER STATS : {player_list_str}")
+        st.subheader(f"PLAYER STATS : {player_list_str}")
         
         # 선택된 선수 데이터
         p_df = filtered_p[filtered_p['선수명'].isin(selected_players)]
@@ -328,13 +419,15 @@ else:
         
         st.divider()
         
-        st.markdown("##### 📝 Match Log")
+        st.markdown("##### Match Log")
         if not p_df.empty:
             view_df = p_df.copy()
-            view_df['MOM'] = view_df['MOM'].apply(lambda x: '⭐' if x == 1 else '')
+            # 이모지 제거 (O 표시로 변경)
+            view_df['MOM'] = view_df['MOM'].apply(lambda x: 'O' if x == 1 else '')
             view_df['출전시간'] = view_df['출전시간'].astype(int).astype(str) + "'"
             
-            cols = ['연도', '날짜', '대회명', '상대팀', '선발/교체', '출전시간', '득점']
+            # '연도' 컬럼 제외
+            cols = ['날짜', '대회명', '상대팀', '선발/교체', '출전시간', '득점']
             if is_goalkeeper:
                 cols.append('실점')
             else:
