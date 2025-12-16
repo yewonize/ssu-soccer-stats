@@ -17,7 +17,7 @@ st.markdown("""
     /* 폰트 설정 및 전체 글자 크기 축소 */
     html, body, [class*="css"] {
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-        font-size: 16px;
+        font-size: 13px;
     }
     
     /* 메인 컨테이너 패딩 조절 */
@@ -58,6 +58,15 @@ st.markdown("""
         margin: 0;
     }
     
+    /* 데이터 카드 스타일 */
+    .data-card {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+        border: 1px solid #eee;
+    }
     
     /* 커스텀 메트릭 박스 스타일 */
     .custom-metric-box {
@@ -68,18 +77,18 @@ st.markdown("""
         text-align: center;
     }
     .metric-label {
-        font-size: 14px;
+        font-size: 11px;
         color: #666;
         margin-bottom: 4px;
         font-weight: 500;
     }
     .metric-value {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         color: #333;
     }
     .metric-unit {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: normal;
         color: #777;
         margin-left: 1px;
@@ -95,7 +104,7 @@ st.markdown("""
         background-color: #f8f9fa !important;
     }
     tbody td {
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
     thead tr th:first-child {display:none}
     tbody th {display:none}
@@ -130,8 +139,10 @@ if 'match_csv' not in st.session_state:
 
 def preprocess_data(df_p, df_m):
     """데이터 전처리 공통 함수"""
-    df_p['날짜'] = df_p['날짜'].astype(str)
-    df_m['날짜'] = df_m['날짜'].astype(str)
+    # 날짜를 실제 날짜 형식(datetime)으로 변환
+    df_p['날짜'] = pd.to_datetime(df_p['날짜'], errors='coerce')
+    df_m['날짜'] = pd.to_datetime(df_m['날짜'], errors='coerce')
+    
     df_p['연도'] = df_p['연도'].astype(int)
     df_m['연도'] = df_m['연도'].astype(int)
     
@@ -172,7 +183,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 데이터 등록/수정 섹션 (st.dialog 대신 st.expander 사용)
+# 데이터 등록/수정 섹션
 with st.expander("데이터 일괄 등록/수정 (클릭하여 열기)", expanded=False):
     st.info("엑셀이나 CSV 파일의 내용을 복사해서 아래 입력창에 붙여넣으세요. (첫 줄 헤더 포함)")
     
@@ -250,7 +261,7 @@ with f_col4:
 with f_col5:
     st.write("") 
     st.write("") 
-    st.button("필터 초기화", on_click=reset_filters)
+    st.button("초기화", on_click=reset_filters)
 
 # -----------------------------------------------------------------------------
 # 5. 데이터 필터링 적용
@@ -320,18 +331,25 @@ if not selected_players:
         with mc2:
             render_metric("전적", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
         with mc3:
-            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'></span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'></span>")
+            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'>득</span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'>실</span>")
         with mc4:
             render_metric("최다 MOM", mom_text)
         
         st.divider()
 
-        t1, t2 = st.tabs(["전체 경기", "선수 랭킹"])
+        t1, t2 = st.tabs(["전체 경기 일정", "선수 랭킹"])
         
         with t1:
+            # 날짜 내림차순 정렬
+            final_match_df = final_match_df.sort_values(by='날짜', ascending=False)
+            
             view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', 'MOM']
             view_cols = [c for c in view_cols if c in final_match_df.columns]
+            
             display_match = final_match_df[view_cols].copy()
+            # 출력할 때만 문자열로 변환 (YYYY-MM-DD)
+            display_match['날짜'] = display_match['날짜'].dt.strftime('%Y-%m-%d')
+            
             st.dataframe(display_match.fillna(""), use_container_width=True, hide_index=True)
             
         with t2:
@@ -357,11 +375,12 @@ else:
     
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader(f"PLAYER STATS : {player_list_str}")
+        st.subheader(f"🏃 PLAYER STATS : {player_list_str}")
         
         p_df = filtered_p[filtered_p['선수명'].isin(selected_players)]
         is_goalkeeper = p_df['실점'].sum() > 0
         
+        # 기본 스탯 계산
         p_apps = len(p_df)
         p_starts = len(p_df[p_df['선발/교체'] == '선발'])
         p_subs = len(p_df[p_df['선발/교체'] == '교체'])
@@ -369,29 +388,76 @@ else:
         p_mom_count = int(p_df['MOM'].sum())
         
         if is_goalkeeper:
-            # 골키퍼인 경우 실점 표시 (빨간색)
             stat_val_2 = int(p_df['실점'].sum())
-            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'></span>"
+            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'>실</span>"
             stat2_label = "득점 / 실점(GK)"
-            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
         else:
-            # 필드 플레이어인 경우 도움 표시
             stat_val_2 = int(p_df['도움'].sum())
-            val2_html = f"{stat_val_2}<span class='metric-unit'></span>"
+            val2_html = f"{stat_val_2}<span class='metric-unit'>도</span>"
             stat2_label = "득점 / 도움"
-            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
 
+        # 메트릭 표시
         pc1, pc2, pc3, pc4 = st.columns(4)
         with pc1:
             render_metric("출전 경기", f"{p_apps}<span class='metric-unit'>경기</span>")
         with pc2:
-            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선발</span> / {p_subs}<span class='metric-unit'>교체</span>")
+            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선</span> / {p_subs}<span class='metric-unit'>교</span>")
         with pc3:
             render_metric(stat2_label, f"{val1_html} / {val2_html}")
         with pc4:
             render_metric("MOM 선정", f"{p_mom_count}<span class='metric-unit'>회</span>")
         
         st.divider()
+        
+        # -----------------------------------------------------------------
+        # (추가) 연도 필터가 선택되지 않았을 때만 -> 연도별 기록 비교 테이블 표시
+        # -----------------------------------------------------------------
+        if not selected_years:
+            st.markdown("##### 📅 연도별 기록 비교 (Yearly Stats)")
+            
+            # 연도별 집계
+            yearly_stats = p_df.groupby('연도').agg({
+                '날짜': 'count', # 경기수
+                '득점': 'sum',
+                '도움': 'sum',
+                '실점': 'sum',
+                'MOM': 'sum'
+            }).rename(columns={'날짜': '경기수'})
+            
+            # 선발 횟수 별도 집계 (집계 함수에서 lambda 쓰기보다 안전하게)
+            start_counts = p_df[p_df['선발/교체'] == '선발'].groupby('연도').size()
+            yearly_stats['선발'] = start_counts
+            yearly_stats['선발'] = yearly_stats['선발'].fillna(0).astype(int)
+            yearly_stats['교체'] = yearly_stats['경기수'] - yearly_stats['선발']
+            
+            # 최신 연도가 위로 오게 정렬
+            yearly_stats = yearly_stats.sort_index(ascending=False)
+            
+            # 표시할 컬럼 정리
+            show_cols = ['경기수', '선발', '교체', '득점']
+            if is_goalkeeper:
+                show_cols.append('실점')
+            else:
+                show_cols.append('도움')
+            show_cols.append('MOM')
+            
+            # 인덱스(연도)를 컬럼으로 꺼내고 문자열로 변환 (2,025 방지)
+            yearly_display = yearly_stats[show_cols].reset_index()
+            yearly_display['연도'] = yearly_display['연도'].astype(str)
+            
+            st.dataframe(
+                yearly_display, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "연도": st.column_config.TextColumn("연도"),
+                    "경기수": st.column_config.NumberColumn("경기수", format="%d경기"),
+                    "득점": st.column_config.NumberColumn("득점", format="%d골"),
+                }
+            )
+            st.divider()
         
         st.markdown("##### Match Log")
         if not p_df.empty:
@@ -407,7 +473,12 @@ else:
             cols.extend(['MOM', '경고', '비고'])
             
             view_cols = [c for c in cols if c in view_df.columns]
-            view_df = view_df.sort_values('날짜', ascending=False)
+            
+            # 날짜 기준 내림차순 정렬
+            view_df = view_df.sort_values(by='날짜', ascending=False)
+            
+            # 출력 시 날짜 포맷 변환
+            view_df['날짜'] = view_df['날짜'].dt.strftime('%Y-%m-%d')
             
             st.dataframe(view_df[view_cols].fillna(""), use_container_width=True, hide_index=True)
         else:
