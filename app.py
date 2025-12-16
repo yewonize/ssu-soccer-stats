@@ -359,13 +359,13 @@ if not selected_players:
 
             # 랭킹 정렬 버튼 (4개)
             rb1, rb2, rb3, rb4 = st.columns(4)
-            if rb1.button("⚽ 득점순", use_container_width=True):
+            if rb1.button("득점순", use_container_width=True):
                 st.session_state['rank_sort_key'] = '득점'
-            if rb2.button("⭐ MOM순", use_container_width=True):
+            if rb2.button("MOM 횟수", use_container_width=True):
                 st.session_state['rank_sort_key'] = 'MOM'
-            if rb3.button("🏃 경기수순", use_container_width=True):
+            if rb3.button("경기 수", use_container_width=True):
                 st.session_state['rank_sort_key'] = '경기수'
-            if rb4.button("⏱️ 출전시간순", use_container_width=True):
+            if rb4.button("출전 시간", use_container_width=True):
                 st.session_state['rank_sort_key'] = '출전시간'
 
             # 데이터 집계 (출전시간 추가)
@@ -410,11 +410,11 @@ if not selected_players:
                 rank_df[cols_order], 
                 use_container_width=True,
                 column_config={
-                    "득점": st.column_config.NumberColumn(format="%d골"),
-                    "경기수": st.column_config.NumberColumn(format="%d경기"),
-                    "출전시간": st.column_config.NumberColumn(format="%d분"),
-                    "도움": st.column_config.NumberColumn(format="%d개"),
-                    "MOM": st.column_config.NumberColumn(format="%d회"),
+                    "득점": st.column_config.NumberColumn(format="%d"),
+                    "경기수": st.column_config.NumberColumn(format="%d"),
+                    "출전시간": st.column_config.NumberColumn(format="%d"),
+                    "도움": st.column_config.NumberColumn(format="%d"),
+                    "MOM": st.column_config.NumberColumn(format="%d"),
                 }
             )
         st.markdown('</div>', unsafe_allow_html=True)
