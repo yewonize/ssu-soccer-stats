@@ -58,15 +58,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* 데이터 카드 스타일 */
-    .data-card {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        margin-bottom: 15px;
-        border: 1px solid #eee;
-    }
     
     /* 커스텀 메트릭 박스 스타일 */
     .custom-metric-box {
