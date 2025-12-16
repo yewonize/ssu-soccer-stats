@@ -353,18 +353,68 @@ if not selected_players:
             st.dataframe(display_match.fillna(""), use_container_width=True, hide_index=True)
             
         with t2:
+            # 정렬 상태 관리를 위한 세션 초기화
+            if 'rank_sort_key' not in st.session_state:
+                st.session_state['rank_sort_key'] = '득점'
+
+            # 랭킹 정렬 버튼 (4개)
+            rb1, rb2, rb3, rb4 = st.columns(4)
+            if rb1.button("⚽ 득점순", use_container_width=True):
+                st.session_state['rank_sort_key'] = '득점'
+            if rb2.button("⭐ MOM순", use_container_width=True):
+                st.session_state['rank_sort_key'] = 'MOM'
+            if rb3.button("🏃 경기수순", use_container_width=True):
+                st.session_state['rank_sort_key'] = '경기수'
+            if rb4.button("⏱️ 출전시간순", use_container_width=True):
+                st.session_state['rank_sort_key'] = '출전시간'
+
+            # 데이터 집계 (출전시간 추가)
             rank_df = filtered_p.groupby('선수명').agg({
-                '득점': 'sum', '도움': 'sum', 'MOM': 'sum', '출전시간': 'count'
-            }).reset_index().rename(columns={'출전시간': '경기수'})
+                '득점': 'sum', 
+                '도움': 'sum', 
+                'MOM': 'sum', 
+                '출전시간': 'sum', # 분 단위 합계
+                '날짜': 'count'    # 경기수
+            }).reset_index().rename(columns={'날짜': '경기수'})
             
-            rank_df = rank_df.sort_values(['득점', '경기수'], ascending=[False, False])
+            # 선택된 키에 따라 정렬
+            sort_key = st.session_state['rank_sort_key']
+            
+            if sort_key == '득점':
+                rank_df = rank_df.sort_values(['득점', '경기수', '출전시간'], ascending=[False, False, False])
+            elif sort_key == 'MOM':
+                rank_df = rank_df.sort_values(['MOM', '득점', '경기수'], ascending=[False, False, False])
+            elif sort_key == '경기수':
+                rank_df = rank_df.sort_values(['경기수', '출전시간', '득점'], ascending=[False, False, False])
+            elif sort_key == '출전시간':
+                rank_df = rank_df.sort_values(['출전시간', '경기수', '득점'], ascending=[False, False, False])
+            
+            # 순위 인덱스 생성
             rank_df.index = range(1, len(rank_df)+1)
             
+            # 컬럼 순서 조정 (선택한 정렬 기준을 앞쪽으로)
+            base_cols = ['선수명']
+            if sort_key == '득점':
+                cols_order = base_cols + ['득점', '경기수', '출전시간', '도움', 'MOM']
+            elif sort_key == 'MOM':
+                cols_order = base_cols + ['MOM', '득점', '경기수', '출전시간', '도움']
+            elif sort_key == '경기수':
+                cols_order = base_cols + ['경기수', '출전시간', '득점', '도움', 'MOM']
+            elif sort_key == '출전시간':
+                cols_order = base_cols + ['출전시간', '경기수', '득점', '도움', 'MOM']
+            else:
+                cols_order = base_cols + ['득점', '경기수', '출전시간', '도움', 'MOM']
+            
+            # 데이터프레임 표시
             st.dataframe(
-                rank_df, use_container_width=True,
+                rank_df[cols_order], 
+                use_container_width=True,
                 column_config={
-                    "득점": st.column_config.ProgressColumn(format="%d골", min_value=0, max_value=int(rank_df['득점'].max())),
-                    "경기수": st.column_config.NumberColumn(format="%d경기")
+                    "득점": st.column_config.NumberColumn(format="%d골"),
+                    "경기수": st.column_config.NumberColumn(format="%d경기"),
+                    "출전시간": st.column_config.NumberColumn(format="%d분"),
+                    "도움": st.column_config.NumberColumn(format="%d개"),
+                    "MOM": st.column_config.NumberColumn(format="%d회"),
                 }
             )
         st.markdown('</div>', unsafe_allow_html=True)
