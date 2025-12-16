@@ -103,7 +103,7 @@ st.markdown("""
     /* 버튼 스타일 */
     div.stButton > button {
         border-radius: 6px;
-        font-size: 14px;
+        font-size: 12px;
         padding: 0.25rem 0.75rem;
     }
     </style>
