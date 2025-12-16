@@ -420,10 +420,10 @@ else:
             # 연도별 집계: 경기수, 득점, 도움, 실점, 출전시간, MOM
             yearly_stats = p_df.groupby('연도').agg({
                 '날짜': 'count', # 경기수
+                '출전시간': 'sum',
                 '득점': 'sum',
                 '도움': 'sum',
                 '실점': 'sum',
-                '출전시간': 'sum',
                 'MOM': 'sum'
             }).rename(columns={'날짜': '경기수'})
             
@@ -441,7 +441,7 @@ else:
             yearly_display['연도'] = yearly_display['연도'].astype(str)
             
             # 표시할 컬럼 순서
-            show_cols = ['연도', '경기수', '득점', '도움', '실점', '출전시간', 'MOM']
+            show_cols = ['연도', '경기수', '출전시간', '득점', '도움', '실점', 'MOM']
             
             st.dataframe(
                 yearly_display[show_cols], 
@@ -450,10 +450,10 @@ else:
                 column_config={
                     "연도": st.column_config.TextColumn("연도"),
                     "경기수": st.column_config.NumberColumn("경기수", format="%d"),
+                    "출전시간": st.column_config.NumberColumn("출전시간", format="%d"),
                     "득점": st.column_config.NumberColumn("득점", format="%d"),
                     "도움": st.column_config.NumberColumn("도움", format="%d"),
                     "실점": st.column_config.NumberColumn("실점", format="%d"),
-                    "출전시간": st.column_config.NumberColumn("출전시간", format="%d"),
                     "MOM": st.column_config.NumberColumn("MOM", format="%d"),
                 }
             )
