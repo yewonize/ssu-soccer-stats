@@ -7,8 +7,8 @@ st.set_page_config(page_title="숭실대학교 축구단 기록실", layout="wid
 # 데이터 로드 (캐싱 적용)
 @st.cache_data
 def load_data():
-    df_p = pd.read_csv("숭실대학교 축구단 기록 - 경기별선수기록.csv")
-    df_m = pd.read_csv("숭실대학교 축구단 기록 - 경기기록.csv")
+    df_p = pd.read_csv("player_records.csv")
+    df_m = pd.read_csv("match_records.csv")
     return df_p, df_m
 
 df_player, df_match = load_data()
