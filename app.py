@@ -326,10 +326,10 @@ if not selected_players:
         
         st.divider()
 
-        t1, t2 = st.tabs(["전체 경기 일정", "선수 랭킹"])
+        t1, t2 = st.tabs(["전체 경기", "선수 랭킹"])
         
         with t1:
-            view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', '비고']
+            view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', 'MOM']
             view_cols = [c for c in view_cols if c in final_match_df.columns]
             display_match = final_match_df[view_cols].copy()
             st.dataframe(display_match.fillna(""), use_container_width=True, hide_index=True)
@@ -371,21 +371,21 @@ else:
         if is_goalkeeper:
             # 골키퍼인 경우 실점 표시 (빨간색)
             stat_val_2 = int(p_df['실점'].sum())
-            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'>실</span>"
+            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'></span>"
             stat2_label = "득점 / 실점(GK)"
-            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
         else:
             # 필드 플레이어인 경우 도움 표시
             stat_val_2 = int(p_df['도움'].sum())
-            val2_html = f"{stat_val_2}<span class='metric-unit'>도</span>"
+            val2_html = f"{stat_val_2}<span class='metric-unit'></span>"
             stat2_label = "득점 / 도움"
-            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
 
         pc1, pc2, pc3, pc4 = st.columns(4)
         with pc1:
             render_metric("출전 경기", f"{p_apps}<span class='metric-unit'>경기</span>")
         with pc2:
-            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선</span> / {p_subs}<span class='metric-unit'>교</span>")
+            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선발</span> / {p_subs}<span class='metric-unit'>교체</span>")
         with pc3:
             render_metric(stat2_label, f"{val1_html} / {val2_html}")
         with pc4:
