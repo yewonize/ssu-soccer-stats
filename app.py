@@ -17,7 +17,7 @@ st.markdown("""
     /* 폰트 설정 및 전체 글자 크기 축소 */
     html, body, [class*="css"] {
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-        font-size: 13px;
+        font-size: 16px;
     }
     
     /* 메인 컨테이너 패딩 조절 */
@@ -58,15 +58,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* 데이터 카드 스타일 */
-    .data-card {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        margin-bottom: 15px;
-        border: 1px solid #eee;
-    }
     
     /* 커스텀 메트릭 박스 스타일 */
     .custom-metric-box {
@@ -77,18 +68,18 @@ st.markdown("""
         text-align: center;
     }
     .metric-label {
-        font-size: 11px;
+        font-size: 14px;
         color: #666;
         margin-bottom: 4px;
         font-weight: 500;
     }
     .metric-value {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 700;
         color: #333;
     }
     .metric-unit {
-        font-size: 11px;
+        font-size: 12px;
         font-weight: normal;
         color: #777;
         margin-left: 1px;
@@ -104,7 +95,7 @@ st.markdown("""
         background-color: #f8f9fa !important;
     }
     tbody td {
-        font-size: 12px !important;
+        font-size: 14px !important;
     }
     thead tr th:first-child {display:none}
     tbody th {display:none}
@@ -112,7 +103,7 @@ st.markdown("""
     /* 버튼 스타일 */
     div.stButton > button {
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 14px;
         padding: 0.25rem 0.75rem;
     }
     </style>
@@ -259,7 +250,7 @@ with f_col4:
 with f_col5:
     st.write("") 
     st.write("") 
-    st.button("초기화", on_click=reset_filters)
+    st.button("필터 초기화", on_click=reset_filters)
 
 # -----------------------------------------------------------------------------
 # 5. 데이터 필터링 적용
@@ -329,7 +320,7 @@ if not selected_players:
         with mc2:
             render_metric("전적", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
         with mc3:
-            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'>득</span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'>실</span>")
+            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'></span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'></span>")
         with mc4:
             render_metric("최다 MOM", mom_text)
         
