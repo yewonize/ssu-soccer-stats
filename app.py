@@ -417,12 +417,13 @@ else:
         if not selected_years:
             st.markdown("##### 연도별 기록 비교")
             
-            # 연도별 집계
+            # 연도별 집계: 경기수, 득점, 도움, 실점, 출전시간, MOM
             yearly_stats = p_df.groupby('연도').agg({
                 '날짜': 'count', # 경기수
                 '득점': 'sum',
                 '도움': 'sum',
                 '실점': 'sum',
+                '출전시간': 'sum',
                 'MOM': 'sum'
             }).rename(columns={'날짜': '경기수'})
             
@@ -434,27 +435,26 @@ else:
             
             # 최신 연도가 위로 오게 정렬
             yearly_stats = yearly_stats.sort_index(ascending=True)
-            
-            # 표시할 컬럼 정리
-            show_cols = ['경기수', '선발', '교체', '득점']
-            if is_goalkeeper:
-                show_cols.append('실점')
-            else:
-                show_cols.append('도움')
-            show_cols.append('MOM')
-            
+
             # 인덱스(연도)를 컬럼으로 꺼내고 문자열로 변환 (2,025 방지)
-            yearly_display = yearly_stats[show_cols].reset_index()
+            yearly_display = yearly_stats.reset_index()
             yearly_display['연도'] = yearly_display['연도'].astype(str)
             
+            # 표시할 컬럼 순서
+            show_cols = ['연도', '경기수', '득점', '도움', '실점', '출전시간', 'MOM']
+            
             st.dataframe(
-                yearly_display, 
+                yearly_display[show_cols], 
                 use_container_width=True, 
                 hide_index=True,
                 column_config={
                     "연도": st.column_config.TextColumn("연도"),
-                    "경기수": st.column_config.NumberColumn("경기수", format="%d경기"),
-                    "득점": st.column_config.NumberColumn("득점", format="%d골"),
+                    "경기수": st.column_config.NumberColumn("경기수", format="%d"),
+                    "득점": st.column_config.NumberColumn("득점", format="%d"),
+                    "도움": st.column_config.NumberColumn("도움", format="%d"),
+                    "실점": st.column_config.NumberColumn("실점", format="%d"),
+                    "출전시간": st.column_config.NumberColumn("출전시간", format="%d"),
+                    "MOM": st.column_config.NumberColumn("MOM", format="%d"),
                 }
             )
             st.divider()
