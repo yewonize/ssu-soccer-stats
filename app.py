@@ -17,21 +17,21 @@ st.markdown("""
     /* 폰트 설정 및 전체 글자 크기 축소 */
     html, body, [class*="css"] {
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-        font-size: 14px;
+        font-size: 13px; /* 전체 기본 폰트 사이즈 축소 */
     }
     
     /* 메인 컨테이너 패딩 조절 */
     .block-container {
-        padding-top: 2rem;
+        padding-top: 1.5rem;
         padding-bottom: 2rem;
     }
     
     /* 헤더 스타일 (파란색 배경) */
     .header-box {
         background-color: #00467F; /* SSU Blue */
-        padding: 30px;
-        border-radius: 12px;
-        margin-bottom: 20px;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 15px;
         color: white;
         display: flex;
         justify-content: space-between;
@@ -44,7 +44,7 @@ st.markdown("""
     }
     
     .main-title { 
-        font-size: 28px; 
+        font-size: 24px; 
         font-weight: 800; 
         color: white; 
         line-height: 1.2;
@@ -52,60 +52,68 @@ st.markdown("""
     }
     
     .sub-title { 
-        font-size: 16px; 
+        font-size: 14px; 
         font-weight: 500; 
         color: #e0e0e0; 
         margin: 0;
     }
     
-    /* 카드 스타일 (데이터 표시 영역) */
+    /* 데이터 카드 스타일 */
     .data-card {
         background-color: #ffffff;
         padding: 20px;
         border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
         border: 1px solid #eee;
     }
     
-    /* 섹션 헤더 (서브헤더) 스타일 */
-    h3 {
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        color: #333 !important;
-        margin-bottom: 15px !important;
-    }
-    
-    h5 {
-        font-size: 15px !important;
-        font-weight: 600 !important;
-        color: #555 !important;
-    }
-    
-    /* 메트릭 카드 스타일 */
-    div[data-testid="stMetric"] {
+    /* 커스텀 메트릭 박스 스타일 */
+    .custom-metric-box {
         background-color: #f8f9fa;
-        padding: 10px 15px;
+        padding: 12px 10px;
         border-radius: 8px;
         border: 1px solid #eee;
+        text-align: center;
     }
-    div[data-testid="stMetricLabel"] {
-        font-size: 13px;
+    .metric-label {
+        font-size: 11px;
         color: #666;
+        margin-bottom: 4px;
+        font-weight: 500;
     }
-    div[data-testid="stMetricValue"] {
-        font-size: 20px;
+    .metric-value {
+        font-size: 18px; /* 숫자 크기 */
         font-weight: 700;
-        color: #00467F;
+        color: #333;
+    }
+    .metric-unit {
+        font-size: 11px; /* 단위(경기, 회 등) 크기 작게 */
+        font-weight: normal;
+        color: #777;
+        margin-left: 1px;
     }
     
-    /* 테이블 헤더 스타일 */
+    /* 득실 색상 클래스 */
+    .val-blue { color: #00467F; } /* 득점 파란색 */
+    .val-red { color: #D32F2F; }  /* 실점 빨간색 */
+    
+    /* 테이블 스타일 조정 */
+    thead tr th {
+        font-size: 12px !important;
+        background-color: #f8f9fa !important;
+    }
+    tbody td {
+        font-size: 12px !important;
+    }
     thead tr th:first-child {display:none}
     tbody th {display:none}
     
-    /* 버튼 스타일 조정 */
+    /* 버튼 스타일 */
     div.stButton > button {
-        border-radius: 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        padding: 0.25rem 0.75rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -114,7 +122,7 @@ st.markdown("""
 # 2. 데이터 처리 및 세션 관리
 # -----------------------------------------------------------------------------
 
-# 초기 데이터 로드 (세션 상태에 저장하여 수정 가능하게 함)
+# 초기 데이터 로드
 if 'player_csv' not in st.session_state:
     try:
         with open("player_records.csv", "r", encoding="utf-8") as f:
@@ -131,13 +139,11 @@ if 'match_csv' not in st.session_state:
 
 def preprocess_data(df_p, df_m):
     """데이터 전처리 공통 함수"""
-    # 날짜/연도 타입 통일
     df_p['날짜'] = df_p['날짜'].astype(str)
     df_m['날짜'] = df_m['날짜'].astype(str)
     df_p['연도'] = df_p['연도'].astype(int)
     df_m['연도'] = df_m['연도'].astype(int)
     
-    # 숫자형 데이터 결측치 처리 (NaN -> 0)
     numeric_cols = ['득점', '도움', '실점', '경고', 'MOM', '출전시간']
     for col in numeric_cols:
         if col in df_p.columns:
@@ -164,7 +170,7 @@ def parse_match_result(score_str):
 # -----------------------------------------------------------------------------
 # 3. 팝업창(Dialog) 정의
 # -----------------------------------------------------------------------------
-@st.dialog("📊 데이터 일괄 등록/수정")
+@st.dialog("데이터 일괄 등록/수정")
 def edit_data_dialog():
     st.markdown("엑셀이나 CSV 파일의 내용을 복사해서 아래 입력창에 붙여넣으세요. (첫 줄 헤더 포함)")
     
@@ -193,7 +199,6 @@ def edit_data_dialog():
             
     with col_btn2:
         if st.button("업데이트", type="primary", use_container_width=True):
-            # 세션 상태 업데이트
             st.session_state.match_csv = new_match_csv
             st.session_state.player_csv = new_player_csv
             st.rerun()
@@ -202,7 +207,6 @@ def edit_data_dialog():
 # 4. 헤더 구성 및 데이터 로드
 # -----------------------------------------------------------------------------
 
-# 헤더 섹션
 col_header_left, col_header_right = st.columns([3, 1])
 
 with col_header_left:
@@ -216,7 +220,6 @@ with col_header_left:
     """, unsafe_allow_html=True)
 
 with col_header_right:
-    # 우측 상단에 버튼 배치 (헤더 높이와 맞추기 위해 여백 조정)
     st.write("") 
     st.write("")
     if st.button("📊 데이터 등록/수정", use_container_width=True):
@@ -224,7 +227,6 @@ with col_header_right:
 
 st.divider()
 
-# 데이터 로드 (세션 상태에서 읽기)
 if st.session_state.player_csv and st.session_state.match_csv:
     try:
         df_p_raw = pd.read_csv(io.StringIO(st.session_state.player_csv))
@@ -242,39 +244,25 @@ else:
 # -----------------------------------------------------------------------------
 st.markdown("##### 🔍 기록 검색 필터")
 
-# 필터 초기화 함수
 def reset_filters():
     st.session_state.year = []
     st.session_state.tour = []
     st.session_state.opp = []
     st.session_state.player = []
 
-# 필터 레이아웃
 f_col1, f_col2, f_col3, f_col4, f_col5 = st.columns([1.5, 1.5, 1.5, 1.5, 0.5])
 
-# 전체 데이터 기준 옵션
 all_years = sorted(df_player['연도'].unique(), reverse=True)
 all_tournaments = sorted(df_player['대회명'].unique())
 all_opponents = sorted(df_player['상대팀'].unique())
 
-# 1. 연도 선택
 with f_col1:
-    selected_years = st.multiselect(
-        "연도", 
-        all_years, 
-        key='year',
-        format_func=lambda x: str(x)
-    )
-
-# 2. 대회명 선택
+    selected_years = st.multiselect("연도", all_years, key='year', format_func=lambda x: str(x))
 with f_col2:
     selected_tournaments = st.multiselect("대회명", all_tournaments, key='tour')
-
-# 3. 상대팀 선택
 with f_col3:
     selected_opponents = st.multiselect("상대팀", all_opponents, key='opp')
 
-# 4. 선수명 선택 (로직 개선: 선택된 연도에 기록이 있는 선수만 표시)
 temp_player_df = df_player.copy()
 if selected_years:
     temp_player_df = temp_player_df[temp_player_df['연도'].isin(selected_years)]
@@ -282,8 +270,6 @@ available_players = sorted(temp_player_df['선수명'].unique())
 
 with f_col4:
     selected_players = st.multiselect("선수명", available_players, key='player')
-
-# 5. 초기화 버튼
 with f_col5:
     st.write("") 
     st.write("") 
@@ -301,13 +287,11 @@ if selected_tournaments:
 if selected_opponents:
     filtered_p = filtered_p[filtered_p['상대팀'].isin(selected_opponents)]
 
-# 선수 선택 여부에 따라 데이터 분기
 if selected_players:
     filtered_p_match_subset = filtered_p[filtered_p['선수명'].isin(selected_players)]
 else:
     filtered_p_match_subset = filtered_p
 
-# 경기 기록 매칭
 relevant_matches = filtered_p_match_subset[['날짜', '상대팀']].drop_duplicates()
 final_match_df = df_match.merge(relevant_matches, on=['날짜', '상대팀'], how='inner')
 
@@ -315,14 +299,21 @@ final_match_df = df_match.merge(relevant_matches, on=['날짜', '상대팀'], ho
 # 7. 메인 콘텐츠 (카드형 디자인)
 # -----------------------------------------------------------------------------
 
+# HTML로 커스텀 메트릭을 그리는 함수
+def render_metric(label, value_html):
+    st.markdown(f"""
+    <div class="custom-metric-box">
+        <div class="metric-label">{label}</div>
+        <div class="metric-value">{value_html}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # [Case 1] 전체 선수 보기 (Team Record)
 if not selected_players:
-    # 카드 시작
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader("TEAM RECORDS (전체 보기)")
+        st.subheader("🛡️ TEAM RECORDS")
         
-        # (1) 요약 통계
         wins, draws, losses = 0, 0, 0
         team_goals, team_conceded = 0, 0
         
@@ -342,24 +333,28 @@ if not selected_players:
         if not mom_stats.empty and mom_stats.iloc[0] > 0:
             top_mom_player = mom_stats.index[0]
             top_mom_count = int(mom_stats.iloc[0])
-            mom_text = f"{top_mom_player} ({top_mom_count}회)"
+            mom_text = f"{top_mom_player} <span class='metric-unit'>({top_mom_count}회)</span>"
 
+        # 커스텀 메트릭 렌더링
         mc1, mc2, mc3, mc4 = st.columns(4)
-        mc1.metric("총 경기수", f"{total_games}전")
-        mc2.metric("전적", f"{wins}승 {draws}무 {losses}패")
-        mc3.metric("팀 득실", f"{team_goals}득 / {team_conceded}실")
-        mc4.metric("최다 MOM", mom_text)
+        
+        with mc1:
+            render_metric("총 경기수", f"{total_games}<span class='metric-unit'>경기</span>")
+        with mc2:
+            render_metric("전적", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
+        with mc3:
+            # 득점은 파란색, 실점은 빨간색
+            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'>득</span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'>실</span>")
+        with mc4:
+            render_metric("최다 MOM", mom_text)
         
         st.divider()
 
-        # (2) 탭 (전체 경기가 먼저)
         t1, t2 = st.tabs(["전체 경기 일정", "선수 랭킹"])
         
         with t1:
-            # '연도' 컬럼 제외
             view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', '비고']
             view_cols = [c for c in view_cols if c in final_match_df.columns]
-            
             display_match = final_match_df[view_cols].copy()
             st.dataframe(display_match, use_container_width=True, hide_index=True)
             
@@ -378,55 +373,56 @@ if not selected_players:
                     "경기수": st.column_config.NumberColumn(format="%d경기")
                 }
             )
-        st.markdown('</div>', unsafe_allow_html=True) # 카드 끝
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # [Case 2] 선수 지정 보기 (Player Stats)
 else:
     player_list_str = ", ".join(selected_players)
     
-    # 카드 시작
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader(f"PLAYER STATS : {player_list_str}")
+        st.subheader(f"🏃 PLAYER STATS : {player_list_str}")
         
-        # 선택된 선수 데이터
         p_df = filtered_p[filtered_p['선수명'].isin(selected_players)]
-        
-        # 골키퍼 여부 (실점 기록 존재 시)
         is_goalkeeper = p_df['실점'].sum() > 0
         
-        # 스탯 계산
         p_apps = len(p_df)
         p_starts = len(p_df[p_df['선발/교체'] == '선발'])
         p_subs = len(p_df[p_df['선발/교체'] == '교체'])
-        
         stat_val_1 = int(p_df['득점'].sum())
+        p_mom_count = int(p_df['MOM'].sum())
         
         if is_goalkeeper:
-            stat_label_2 = "실점 (GK)"
+            # 골키퍼인 경우 실점 표시 (빨간색)
             stat_val_2 = int(p_df['실점'].sum())
+            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'>실</span>"
+            stat2_label = "득점 / 실점(GK)"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
         else:
-            stat_label_2 = "도움"
+            # 필드 플레이어인 경우 도움 표시
             stat_val_2 = int(p_df['도움'].sum())
-            
-        p_mom_count = int(p_df['MOM'].sum())
+            val2_html = f"{stat_val_2}<span class='metric-unit'>도</span>"
+            stat2_label = "득점 / 도움"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
 
         pc1, pc2, pc3, pc4 = st.columns(4)
-        pc1.metric("출전 경기", f"{p_apps}경기")
-        pc2.metric("선발 / 교체", f"{p_starts} / {p_subs}")
-        pc3.metric(f"득점 / {stat_label_2}", f"{stat_val_1} / {stat_val_2}")
-        pc4.metric("MOM 선정", f"{p_mom_count}회")
+        with pc1:
+            render_metric("출전 경기", f"{p_apps}<span class='metric-unit'>경기</span>")
+        with pc2:
+            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선</span> / {p_subs}<span class='metric-unit'>교</span>")
+        with pc3:
+            render_metric(stat2_label, f"{val1_html} / {val2_html}")
+        with pc4:
+            render_metric("MOM 선정", f"{p_mom_count}<span class='metric-unit'>회</span>")
         
         st.divider()
         
         st.markdown("##### Match Log")
         if not p_df.empty:
             view_df = p_df.copy()
-            # 이모지 제거 (O 표시로 변경)
             view_df['MOM'] = view_df['MOM'].apply(lambda x: 'O' if x == 1 else '')
             view_df['출전시간'] = view_df['출전시간'].astype(int).astype(str) + "'"
             
-            # '연도' 컬럼 제외
             cols = ['날짜', '대회명', '상대팀', '선발/교체', '출전시간', '득점']
             if is_goalkeeper:
                 cols.append('실점')
@@ -441,4 +437,4 @@ else:
         else:
             st.warning("선택된 조건의 기록이 없습니다.")
             
-        st.markdown('</div>', unsafe_allow_html=True) # 카드 끝
+        st.markdown('</div>', unsafe_allow_html=True)
