@@ -17,7 +17,7 @@ st.markdown("""
     /* 폰트 설정 및 전체 글자 크기 축소 */
     html, body, [class*="css"] {
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-        font-size: 13px; /* 전체 기본 폰트 사이즈 축소 */
+        font-size: 13px;
     }
     
     /* 메인 컨테이너 패딩 조절 */
@@ -83,20 +83,20 @@ st.markdown("""
         font-weight: 500;
     }
     .metric-value {
-        font-size: 18px; /* 숫자 크기 */
+        font-size: 18px;
         font-weight: 700;
         color: #333;
     }
     .metric-unit {
-        font-size: 11px; /* 단위(경기, 회 등) 크기 작게 */
+        font-size: 11px;
         font-weight: normal;
         color: #777;
         margin-left: 1px;
     }
     
     /* 득실 색상 클래스 */
-    .val-blue { color: #00467F; } /* 득점 파란색 */
-    .val-red { color: #D32F2F; }  /* 실점 빨간색 */
+    .val-blue { color: #00467F; }
+    .val-red { color: #D32F2F; }
     
     /* 테이블 스타일 조정 */
     thead tr th {
@@ -168,65 +168,49 @@ def parse_match_result(score_str):
         return None, 0, 0
 
 # -----------------------------------------------------------------------------
-# 3. 팝업창(Dialog) 정의
-# -----------------------------------------------------------------------------
-@st.dialog("데이터 일괄 등록/수정")
-def edit_data_dialog():
-    st.markdown("엑셀이나 CSV 파일의 내용을 복사해서 아래 입력창에 붙여넣으세요. (첫 줄 헤더 포함)")
-    
-    st.markdown("##### 1. 경기기록 (Match Data)")
-    st.caption("필수 컬럼: 연도, 대회명, 라운드, 날짜, 상대팀, 스코어...")
-    new_match_csv = st.text_area(
-        "match_input", 
-        value=st.session_state.match_csv, 
-        height=200, 
-        label_visibility="collapsed"
-    )
-    
-    st.markdown("##### 2. 선수기록 (Player Data)")
-    st.caption("필수 컬럼: 연도, 대회명, 라운드, 날짜, 상대팀, 선수명, 선발/교체...")
-    new_player_csv = st.text_area(
-        "player_input", 
-        value=st.session_state.player_csv, 
-        height=200, 
-        label_visibility="collapsed"
-    )
-    
-    col_btn1, col_btn2 = st.columns([1, 1])
-    with col_btn1:
-        if st.button("취소", use_container_width=True):
-            st.rerun()
-            
-    with col_btn2:
-        if st.button("업데이트", type="primary", use_container_width=True):
-            st.session_state.match_csv = new_match_csv
-            st.session_state.player_csv = new_player_csv
-            st.rerun()
-
-# -----------------------------------------------------------------------------
-# 4. 헤더 구성 및 데이터 로드
+# 3. 헤더 구성 및 데이터 입력창 (Expander 사용)
 # -----------------------------------------------------------------------------
 
-col_header_left, col_header_right = st.columns([3, 1])
-
-with col_header_left:
-    st.markdown("""
-    <div class="header-box" style="margin-bottom: 0;">
-        <div class="header-text-group">
-            <div class="main-title">SSU DATA CENTER</div>
-            <div class="sub-title">SSU FOOTBALL TEAM</div>
-        </div>
+# 헤더 섹션
+st.markdown("""
+<div class="header-box">
+    <div class="header-text-group">
+        <div class="main-title">SSU DATA CENTER</div>
+        <div class="sub-title">SSU FOOTBALL TEAM</div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-with col_header_right:
-    st.write("") 
-    st.write("")
-    if st.button("📊 데이터 등록/수정", use_container_width=True):
-        edit_data_dialog()
+# 데이터 등록/수정 섹션 (st.dialog 대신 st.expander 사용)
+with st.expander("데이터 일괄 등록/수정 (클릭하여 열기)", expanded=False):
+    st.info("엑셀이나 CSV 파일의 내용을 복사해서 아래 입력창에 붙여넣으세요. (첫 줄 헤더 포함)")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("##### 1. 경기기록 (Match Data)")
+        st.caption("필수 컬럼: 연도, 대회명, 라운드, 날짜, 상대팀, 스코어...")
+        new_match_csv = st.text_area(
+            "match_input", 
+            value=st.session_state.match_csv, 
+            height=200, 
+            label_visibility="collapsed"
+        )
+    with c2:
+        st.markdown("##### 2. 선수기록 (Player Data)")
+        st.caption("필수 컬럼: 연도, 대회명, 라운드, 날짜, 상대팀, 선수명, 선발/교체...")
+        new_player_csv = st.text_area(
+            "player_input", 
+            value=st.session_state.player_csv, 
+            height=200, 
+            label_visibility="collapsed"
+        )
+    
+    if st.button("데이터 업데이트", type="primary"):
+        st.session_state.match_csv = new_match_csv
+        st.session_state.player_csv = new_player_csv
+        st.rerun()
 
-st.divider()
-
+# 데이터 로드
 if st.session_state.player_csv and st.session_state.match_csv:
     try:
         df_p_raw = pd.read_csv(io.StringIO(st.session_state.player_csv))
@@ -236,13 +220,15 @@ if st.session_state.player_csv and st.session_state.match_csv:
         st.error(f"데이터 형식 오류: {e}")
         st.stop()
 else:
-    st.warning("데이터가 없습니다. '데이터 등록/수정' 버튼을 눌러 데이터를 입력해주세요.")
+    st.warning("데이터가 없습니다. 위 입력창에서 데이터를 입력해주세요.")
     st.stop()
 
+st.write("") # 여백
+
 # -----------------------------------------------------------------------------
-# 5. 가로형 필터바
+# 4. 가로형 필터바
 # -----------------------------------------------------------------------------
-st.markdown("##### 🔍 기록 검색 필터")
+st.markdown("##### 기록 검색 필터")
 
 def reset_filters():
     st.session_state.year = []
@@ -276,7 +262,7 @@ with f_col5:
     st.button("초기화", on_click=reset_filters)
 
 # -----------------------------------------------------------------------------
-# 6. 데이터 필터링 적용
+# 5. 데이터 필터링 적용
 # -----------------------------------------------------------------------------
 filtered_p = df_player.copy()
 
@@ -296,7 +282,7 @@ relevant_matches = filtered_p_match_subset[['날짜', '상대팀']].drop_duplica
 final_match_df = df_match.merge(relevant_matches, on=['날짜', '상대팀'], how='inner')
 
 # -----------------------------------------------------------------------------
-# 7. 메인 콘텐츠 (카드형 디자인)
+# 6. 메인 콘텐츠 (카드형 디자인)
 # -----------------------------------------------------------------------------
 
 # HTML로 커스텀 메트릭을 그리는 함수
@@ -312,7 +298,7 @@ def render_metric(label, value_html):
 if not selected_players:
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader("🛡️ TEAM RECORDS")
+        st.subheader("TEAM RECORDS")
         
         wins, draws, losses = 0, 0, 0
         team_goals, team_conceded = 0, 0
@@ -343,7 +329,6 @@ if not selected_players:
         with mc2:
             render_metric("전적", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
         with mc3:
-            # 득점은 파란색, 실점은 빨간색
             render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'>득</span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'>실</span>")
         with mc4:
             render_metric("최다 MOM", mom_text)
@@ -356,7 +341,7 @@ if not selected_players:
             view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', '비고']
             view_cols = [c for c in view_cols if c in final_match_df.columns]
             display_match = final_match_df[view_cols].copy()
-            st.dataframe(display_match, use_container_width=True, hide_index=True)
+            st.dataframe(display_match.fillna(""), use_container_width=True, hide_index=True)
             
         with t2:
             rank_df = filtered_p.groupby('선수명').agg({
@@ -381,7 +366,7 @@ else:
     
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader(f"🏃 PLAYER STATS : {player_list_str}")
+        st.subheader(f"PLAYER STATS : {player_list_str}")
         
         p_df = filtered_p[filtered_p['선수명'].isin(selected_players)]
         is_goalkeeper = p_df['실점'].sum() > 0
@@ -433,7 +418,7 @@ else:
             view_cols = [c for c in cols if c in view_df.columns]
             view_df = view_df.sort_values('날짜', ascending=False)
             
-            st.dataframe(view_df[view_cols], use_container_width=True, hide_index=True)
+            st.dataframe(view_df[view_cols].fillna(""), use_container_width=True, hide_index=True)
         else:
             st.warning("선택된 조건의 기록이 없습니다.")
             
