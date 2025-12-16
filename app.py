@@ -261,7 +261,7 @@ with f_col4:
 with f_col5:
     st.write("") 
     st.write("") 
-    st.button("초기화", on_click=reset_filters)
+    st.button("필터 초기화", on_click=reset_filters)
 
 # -----------------------------------------------------------------------------
 # 5. 데이터 필터링 적용
@@ -331,7 +331,7 @@ if not selected_players:
         with mc2:
             render_metric("전적", f"{wins}<span class='metric-unit'>승</span> {draws}<span class='metric-unit'>무</span> {losses}<span class='metric-unit'>패</span>")
         with mc3:
-            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'>득</span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'>실</span>")
+            render_metric("팀 득실", f"<span class='val-blue'>{team_goals}</span><span class='metric-unit'></span> / <span class='val-red'>{team_conceded}</span><span class='metric-unit'></span>")
         with mc4:
             render_metric("최다 MOM", mom_text)
         
@@ -341,7 +341,7 @@ if not selected_players:
         
         with t1:
             # 날짜 내림차순 정렬
-            final_match_df = final_match_df.sort_values(by='날짜', ascending=False)
+            final_match_df = final_match_df.sort_values(by='날짜', ascending=True)
             
             view_cols = ['대회명', '라운드', '날짜', '상대팀', '스코어', '득점자', 'MOM']
             view_cols = [c for c in view_cols if c in final_match_df.columns]
@@ -375,7 +375,7 @@ else:
     
     with st.container():
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
-        st.subheader(f"🏃 PLAYER STATS : {player_list_str}")
+        st.subheader(f"PLAYER STATS : {player_list_str}")
         
         p_df = filtered_p[filtered_p['선수명'].isin(selected_players)]
         is_goalkeeper = p_df['실점'].sum() > 0
@@ -389,21 +389,21 @@ else:
         
         if is_goalkeeper:
             stat_val_2 = int(p_df['실점'].sum())
-            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'>실</span>"
+            val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'></span>"
             stat2_label = "득점 / 실점(GK)"
-            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
         else:
             stat_val_2 = int(p_df['도움'].sum())
-            val2_html = f"{stat_val_2}<span class='metric-unit'>도</span>"
+            val2_html = f"{stat_val_2}<span class='metric-unit'></span>"
             stat2_label = "득점 / 도움"
-            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'>득</span>"
+            val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
 
         # 메트릭 표시
         pc1, pc2, pc3, pc4 = st.columns(4)
         with pc1:
             render_metric("출전 경기", f"{p_apps}<span class='metric-unit'>경기</span>")
         with pc2:
-            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선</span> / {p_subs}<span class='metric-unit'>교</span>")
+            render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선발</span> / {p_subs}<span class='metric-unit'>교체</span>")
         with pc3:
             render_metric(stat2_label, f"{val1_html} / {val2_html}")
         with pc4:
@@ -415,7 +415,7 @@ else:
         # (추가) 연도 필터가 선택되지 않았을 때만 -> 연도별 기록 비교 테이블 표시
         # -----------------------------------------------------------------
         if not selected_years:
-            st.markdown("##### 📅 연도별 기록 비교 (Yearly Stats)")
+            st.markdown("##### 연도별 기록 비교")
             
             # 연도별 집계
             yearly_stats = p_df.groupby('연도').agg({
@@ -433,7 +433,7 @@ else:
             yearly_stats['교체'] = yearly_stats['경기수'] - yearly_stats['선발']
             
             # 최신 연도가 위로 오게 정렬
-            yearly_stats = yearly_stats.sort_index(ascending=False)
+            yearly_stats = yearly_stats.sort_index(ascending=True)
             
             # 표시할 컬럼 정리
             show_cols = ['경기수', '선발', '교체', '득점']
@@ -475,7 +475,7 @@ else:
             view_cols = [c for c in cols if c in view_df.columns]
             
             # 날짜 기준 내림차순 정렬
-            view_df = view_df.sort_values(by='날짜', ascending=False)
+            view_df = view_df.sort_values(by='날짜', ascending=True)
             
             # 출력 시 날짜 포맷 변환
             view_df['날짜'] = view_df['날짜'].dt.strftime('%Y-%m-%d')
