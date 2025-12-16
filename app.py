@@ -328,7 +328,7 @@ if not selected_players:
         
         st.divider()
 
-        t1, t2 = st.tabs(["전체 경기 일정", "선수"])
+        t1, t2 = st.tabs(["전체 경기", "선수 랭킹"])
         
         with t1:
             # 날짜 내림차순 정렬
