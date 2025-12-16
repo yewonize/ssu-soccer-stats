@@ -359,7 +359,7 @@ if not selected_players:
 
             # 랭킹 정렬 버튼 (4개)
             rb1, rb2, rb3, rb4 = st.columns(4)
-            if rb1.button("득점순", use_container_width=True):
+            if rb1.button("득점", use_container_width=True):
                 st.session_state['rank_sort_key'] = '득점'
             if rb2.button("MOM 횟수", use_container_width=True):
                 st.session_state['rank_sort_key'] = 'MOM'
@@ -440,24 +440,24 @@ else:
         if is_goalkeeper:
             stat_val_2 = int(p_df['실점'].sum())
             val2_html = f"<span class='val-red'>{stat_val_2}</span><span class='metric-unit'></span>"
-            stat2_label = "득점 / 실점(GK)"
+            stat2_label = "개인 득점 / 실점(GK)"
             val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
         else:
             stat_val_2 = int(p_df['도움'].sum())
             val2_html = f"{stat_val_2}<span class='metric-unit'></span>"
-            stat2_label = "득점 / 도움"
+            stat2_label = "개인 득점 / 도움"
             val1_html = f"<span class='val-blue'>{stat_val_1}</span><span class='metric-unit'></span>"
 
         # 메트릭 표시
         pc1, pc2, pc3, pc4 = st.columns(4)
         with pc1:
-            render_metric("출전 경기", f"{p_apps}<span class='metric-unit'>경기</span>")
+            render_metric("선수 출전 경기", f"{p_apps}<span class='metric-unit'>경기</span>")
         with pc2:
             render_metric("선발 / 교체", f"{p_starts}<span class='metric-unit'>선발</span> / {p_subs}<span class='metric-unit'>교체</span>")
         with pc3:
             render_metric(stat2_label, f"{val1_html} / {val2_html}")
         with pc4:
-            render_metric("MOM 선정", f"{p_mom_count}<span class='metric-unit'>회</span>")
+            render_metric("MOM 선정 횟수", f"{p_mom_count}<span class='metric-unit'>회</span>")
         
         st.divider()
         
