@@ -1,31 +1,31 @@
-
 <!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>숭실대학교 축구단 기록실</title>
-    <!-- Stlite(브라우저용 Streamlit) 라이브러리 불러오기 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.0/build/stlite.css" />
+    <title>SSU DATA CENTER</title>
+    <!-- 안정적인 버전(0.58.0) 사용 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.58.0/build/stlite.css" />
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.0/build/stlite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.58.0/build/stlite.js"></script>
     <script>
       stlite.mount(
         {
-          requirements: ["pandas"], // 필요한 라이브러리 목록
-          entrypoint: "app.py",     // 실행할 메인 파일 이름
+          requirements: ["pandas"], 
+          // 중요: 여기에 'streamlit'을 적으면 안 됩니다! (내장되어 있음)
+          entrypoint: "app.py",
           files: {
             "app.py": {
-              url: "./app.py",      // 같은 폴더에 있는 app.py를 읽어옵니다
+              url: "./app.py",
             },
             "player_records.csv": {
-              url: "./player_records.csv", // 영문으로 변경한 선수 기록 파일
+              url: "./player_records.csv",
             },
             "match_records.csv": {
-              url: "./match_records.csv",  // 영문으로 변경한 경기 기록 파일
+              url: "./match_records.csv",
             },
           },
         },
